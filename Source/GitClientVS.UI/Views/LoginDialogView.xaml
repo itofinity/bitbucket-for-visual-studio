@@ -154,6 +154,10 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal" Margin="0,15" HorizontalAlignment="Center">
@@ -180,8 +184,37 @@
             </PasswordBox>
 
             <Button Margin="3" IsDefault="True" Style="{StaticResource ConnectButtonStyle}" IsEnabled="True" Grid.Row="5"  Command="{Binding ConnectCommand}" Content="{x:Static ui:Resources.Connect}" HorizontalAlignment="Center"/>
-            <controls1:ErrorView  Grid.Row="6" Grid.Column="0"  />
+            <controls1:ErrorView  Grid.Row="8" Grid.Column="0"  />
 
+            <Label Content="or" 
+                   Grid.Row="6" Grid.Column="0"
+                   Foreground="White" HorizontalAlignment="Center" FontWeight="Bold"
+                   Visibility="{Binding IsEnterprise,Converter={converters:BoolToNonVisibilityConverter}}"/>
+
+            <TextBlock
+                Grid.Row="7" Grid.Column="0"
+                HorizontalAlignment="Center"
+                Visibility="{Binding IsEnterprise,Converter={converters:BoolToNonVisibilityConverter}}">           
+                <Hyperlink Command="{Binding SignInWithBrowserCommand}">
+                    <Hyperlink.Style>
+                    <Style TargetType="Hyperlink"
+                           BasedOn="{StaticResource {x:Type Hyperlink}}">
+                        <Setter Property="Foreground" Value="White"/>
+                    </Style>
+                </Hyperlink.Style>Sign in with your browser</Hyperlink>
+            </TextBlock>
+
+            <TextBlock
+                Grid.Row="9" Grid.Column="0"
+                Foreground="White" HorizontalAlignment="Center">Need an account?          
+                <Hyperlink Command="{Binding SignUpWithBrowserCommand}">
+                    <Hyperlink.Style>
+                    <Style TargetType="Hyperlink"
+                           BasedOn="{StaticResource {x:Type Hyperlink}}">
+                        <Setter Property="Foreground" Value="White"/>
+                    </Style>
+                </Hyperlink.Style>Sign up</Hyperlink>
+            </TextBlock>
         </Grid>
     </Grid>
 </controls:MetroWindow>

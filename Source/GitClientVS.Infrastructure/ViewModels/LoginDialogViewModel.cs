@@ -11,6 +11,7 @@ using GitClientVS.Contracts.Interfaces.Services;
 using GitClientVS.Contracts.Interfaces.ViewModels;
 using GitClientVS.Contracts.Models;
 using log4net;
+using System.Diagnostics;
 
 namespace GitClientVS.Infrastructure.ViewModels
 {
@@ -22,14 +23,18 @@ namespace GitClientVS.Infrastructure.ViewModels
         private string _login;
         private string _password;
         private ReactiveCommand _connectCommand;
+        private ReactiveCommand _signInWithBrowserCommand;
+        private ReactiveCommand _signUpWithBrowserCommand;
         private string _errorMessage;
         private bool _isLoading;
         private string _host;
         private bool _isEnterprise;
 
         public ICommand ConnectCommand => _connectCommand;
-        public IEnumerable<ReactiveCommand> ThrowableCommands => new List<ReactiveCommand> { _connectCommand };
-        public IEnumerable<ReactiveCommand> LoadingCommands => new[] { _connectCommand };
+        public ICommand SignInWithBrowserCommand => _signInWithBrowserCommand;
+        public ICommand SignUpWithBrowserCommand => _signUpWithBrowserCommand;
+        public IEnumerable<ReactiveCommand> ThrowableCommands => new List<ReactiveCommand> { _connectCommand, _signInWithBrowserCommand, _signUpWithBrowserCommand };
+        public IEnumerable<ReactiveCommand> LoadingCommands => new[] { _connectCommand, _signInWithBrowserCommand, _signUpWithBrowserCommand };
 
         public bool IsLoading
         {
@@ -89,6 +94,8 @@ namespace GitClientVS.Infrastructure.ViewModels
         public void InitializeCommands()
         {
             _connectCommand = ReactiveCommand.CreateFromTask(_ => Connect(), CanExecuteObservable());
+            _signInWithBrowserCommand = ReactiveCommand.CreateFromTask(_ => SignIn());
+            _signUpWithBrowserCommand = ReactiveCommand.CreateFromTask(_ => SignUp());
         }
 
         private async Task Connect()
@@ -105,6 +112,15 @@ namespace GitClientVS.Infrastructure.ViewModels
             OnClose();
         }
 
+        private async Task SignIn()
+        {
+            Process.Start(new ProcessStartInfo("https://bitbucket.org/account/signin/"));
+        }
+
+        private async Task SignUp()
+        {
+            Process.Start(new ProcessStartInfo("https://bitbucket.org/account/signup/"));
+        }
 
         private IObservable<bool> CanExecuteObservable()
         {
