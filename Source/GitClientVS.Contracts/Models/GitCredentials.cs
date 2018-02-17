@@ -10,6 +10,7 @@ namespace GitClientVS.Contracts.Models
     {
         public string Login { get; set; }
         public string Password { get; set; }
+        public string Token { get; set; }
         public Uri Host { get; set; }
         public bool IsEnterprise { get; set; }
     }

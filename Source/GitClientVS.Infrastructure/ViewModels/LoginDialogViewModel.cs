@@ -114,7 +114,14 @@ namespace GitClientVS.Infrastructure.ViewModels
 
         private async Task SignIn()
         {
-            Process.Start(new ProcessStartInfo("https://bitbucket.org/account/signin/"));
+            var gitCredentials = new GitCredentials()
+            {
+                Host = null,
+                IsEnterprise = false
+            };
+
+            await _gitClientService.OAuthLoginAsync(gitCredentials);
+            OnClose();
         }
 
         private async Task SignUp()

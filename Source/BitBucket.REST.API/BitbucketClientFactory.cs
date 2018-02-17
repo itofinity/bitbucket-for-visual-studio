@@ -35,7 +35,16 @@ namespace BitBucket.REST.API
             var client = new BitbucketRestClient(apiConnection);
             var userClient = new UserClient(client, apiConnection);
             var response = await userClient.GetUser();
-            var credentials = new Credentials(response.Username, apiConnection.Credentials.Password);
+
+            Credentials credentials;
+            if (cred.AuthenticationType == Authentication.AuthenticationType.OAuth)
+            {
+                credentials = cred;
+            }
+            else
+            {
+                credentials = new Credentials(response.Username, apiConnection.Credentials.Password);
+            }
 
             apiConnection = new Connection(host, new Uri($"{host.Scheme}://api.{host.Host}/2.0/"), credentials);
 

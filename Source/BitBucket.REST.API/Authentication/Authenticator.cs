@@ -14,6 +14,7 @@ namespace BitBucket.REST.API.Authentication
             {
                 { AuthenticationType.Anonymous, new AnonymousAuthenticator() },
                 { AuthenticationType.Basic, new HttpBasicAuthenticator(credentials.Login, credentials.Password) },
+                { AuthenticationType.OAuth, new OAuth2AuthorizationRequestHeaderAuthenticator(credentials.Password, "Bearer") },
             };
 
             CreatedAuthenticator = Authenticators[credentials.AuthenticationType];

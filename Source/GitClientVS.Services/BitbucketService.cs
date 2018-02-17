@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using BitBucket.REST.API;
@@ -78,18 +80,87 @@ namespace GitClientVS.Services
             }
         }
 
+        public async Task OAuthLoginAsync(GitCredentials gitCredentials)
+        {
+            if (IsConnected)
+                return;
+
+            OnConnectionChanged(new ConnectionData() { IsLoggingIn = true });
+
+            ConnectionData connectionData = ConnectionData.NotLogged;
+
+            var targetUri = new Microsoft.Alm.Authentication.TargetUri("https://bitbucket.org");
+            var scope = Atlassian.Bitbucket.Authentication.TokenScope.SnippetWrite | Atlassian.Bitbucket.Authentication.TokenScope.RepositoryWrite;
+            // a previous attempt to aquire a token failed in a way that suggests the user has
+            // Bitbucket 2FA turned on. so attempt to run the OAuth dance...
+            Atlassian.Bitbucket.Authentication.OAuth.OAuthAuthenticator oauth = new Atlassian.Bitbucket.Authentication.OAuth.OAuthAuthenticator();
+            try
+            {
+                var result = await oauth.GetAuthAsync(targetUri, scope, CancellationToken.None);
+
+                if (!result.IsSuccess)
+                {
+                    Trace.WriteLine($"oauth authentication failed");
+                    return;
+                }
+
+                gitCredentials.Token = result.Token.Value;
+
+                connectionData = new ConnectionData()
+                {
+                    Password = gitCredentials.Password,
+                    Host = gitCredentials.Host,
+                    IsEnterprise = gitCredentials.IsEnterprise,
+                    IsLoggingIn = false,
+                };
+                _bitbucketClient = await CreateBitbucketClient(gitCredentials);
+
+
+                var userResult = await _bitbucketClient.UserClient.GetUser();
+
+                if (userResult == null)
+                {
+                    Trace.WriteLine($"oauth user check failed");
+                    return;
+                }
+
+                connectionData.UserName = userResult.Username;
+                connectionData.IsLoggedIn = true;
+                // everything is hunky dory
+
+            }
+            catch(Exception ex)
+            {
+                Trace.Write(ex);
+            }
+            finally
+            {
+                OnConnectionChanged(connectionData);
+            }
+
+
+        }
+
         private async Task<IBitbucketClient> CreateBitbucketClient(GitCredentials gitCredentials)
         {
             var bitbucketClientFactory = new BitbucketClientFactory();//todo inject?
 
-            var credentials = new Credentials(gitCredentials.Login, gitCredentials.Password);
-
+            var credentials = CreateCredentials(gitCredentials);
             if (!gitCredentials.IsEnterprise)
                 return await bitbucketClientFactory.CreateStandardBitBucketClient(credentials);
             else
                 return await bitbucketClientFactory.CreateEnterpriseBitBucketClient(gitCredentials.Host, credentials);
         }
 
+        private Credentials CreateCredentials(GitCredentials gitCredentials)
+        {
+            if (!string.IsNullOrWhiteSpace(gitCredentials.Token))
+            {
+                return new Credentials(gitCredentials.Token);
+            }
+
+            return new Credentials(gitCredentials.Login, gitCredentials.Password);
+        }
 
         public async Task<IEnumerable<GitUser>> GetRepositoryUsers(string filter)
         {
